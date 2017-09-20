@@ -1,0 +1,14 @@
+Toelaten CORS: runnen graphdb met cors enabled
+google "graphdb cors"
+graphdb settings
+-Dgraphdb.workbench.cors.enable=true
+
+Zou nu mogelijk moeten zijn om ajax calls te doen
+
+Blijkbaar stuurt graphdb resultaten van queries terug als CSV
+Javascript om CSV om te zetten naar array van arrays:
+https://stackoverflow.com/questions/1293147/javascript-code-to-parse-csv-data
+
+
+locale foto's tonen in browser:
+https://stackoverflow.com/questions/4090712/why-cant-i-do-img-src-c-localfile-jpg
