@@ -1,11 +1,33 @@
-div .photoScroll{
-	display:inline-block;
+div .button{
 	margin:5px;
 	padding:5px;
 	border-radius: 5px;
 	background-color:#DDD;
 }
 
-div.mainPanel{
+.button:focused { background-color:#AAA; }
+.button:hover { background-color:#CCC; }
+.button:active { background-color:white; }
+
+div.inline{
 	display:inline-block;
+	vertical-align: top;
+}
+
+div#photo{
+	width:40%;
+	height:90%;
+}
+
+div#photo img{
+	max-width:100%;
+}
+
+div#photo video{
+	max-width:100%;
+}
+
+#personsPanel{
+	max-height:400px;
+	overflow-y:scroll;
 }

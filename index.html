@@ -11,12 +11,22 @@
 <body>
 	<nav class="navbar navbar-default">
 	  <div class="container-fluid">
-		<div id="nextButton" class = "photoScroll">VOLGENDE</div><div id="previousButton" class = "photoScroll">VORIGE</div>
+		<div id="previousButton" class = "inline button">VORIGE</div><div id="nextButton" class = "inline button">VOLGENDE</div>
 		<div>Pad naar folder: <input type="text" id="inputPath"><input type="submit" id="submitPath" value="Ga"></div>
 	  </div>
 	</nav>
-	<div id="photo" class="mainPanel"></div>
-	<div id="info" class="mainPanel"><h4>Mensen</h4><div id="persons"></div><h4>Locaties</h4><div id="location"></div><h4>Gebeurtenissen</h4><div id="event"></div></div>
+	<div id="photo" class="inline"></div>
+	<div id="info" class="inline">
+		<h4>Mensen</h4>
+		<div>Persoon aanmaken: <input type="text" id="newPerson"><input type="submit" id="submitPerson" value="Ga"></div>
+		<div id="personsPanel">
+			<div id="persons" class="inline"></div>
+			<div id="selectPersons" class="inline"></div>
+		</div>
+		<h4>Locaties</h4>
+		<div id="location"></div>
+		<h4>Gebeurtenissen</h4>
+		<div id="event"></div></div>
 	
 </body>
 </html>

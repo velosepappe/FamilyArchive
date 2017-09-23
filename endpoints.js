@@ -3,11 +3,22 @@ $(document).ready(function(){
 	$("#nextButton").click(function() {getPhotoWithOffset(1)});
 	$("#previousButton").click(function() {getPhotoWithOffset(-1)});
 	$("#submitPath").click(function() {currentPath = $("#inputPath").val(); nextPhotoIndex = 0; getPhoto();});
+	$("#submitPerson").click(function() {createNewPerson($("#newPerson").val());});
 });
 
 var nextPhotoIndex = 0;
 var currentPath="";
 
+function createNewPerson(name){
+		$.post( "http://localhost:7200/repositories/Test/statements", { update:getCreateNewPersonRequest(name)} )
+	  .done(function( data ) {
+		  getPhoto();
+	  });
+}
+function getCreateNewPersonRequest(name){
+	return "insert { <http://example.com/person/" + encodeURI(name.split(' ').join('+')) + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. } where {}";
+
+}
 function getPhotoUrlRequest(offset){
 	fragments = currentPath.split("\\");
 	request = "select * where { 	?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/doc/doc> ";
@@ -18,7 +29,7 @@ function getPhotoUrlRequest(offset){
 		}
 		request +=".";
 	}
-	for(; f <6; f++){
+	for(; f <10; f++){
 		request += "OPTIONAL{?a <http://example.com/doc/folder"+f+"> ?f" + f + ".} ";
 	}
 	
@@ -34,9 +45,12 @@ function getLocationsFromDocRequest(docUrl){
 	return "select * where {  <"+ docUrl +"> <http://purl.org/dc/terms/spatial> ?s .} limit 100 ";
 }
 
-
 function getEventsFromDocRequest(docUrl){
 	return "select * where {  <"+ docUrl +"> <http://example.com/doc/recordEvent> ?s .} limit 100 ";
+}
+
+function getAddPersonToDocRequest(docUrl, personUrl){
+	return "insert { <" + personUrl + "> <http://example.com/person/depiction> <" + docUrl + "> } where{} ";
 }
 
 function getPhotoWithOffset(offset){
@@ -54,6 +68,7 @@ function getPhoto(){
 				
 				displayPhoto(value);
 				displayPersons(value);
+				displayPersonsToSelect(value);
 				displayLocation(value);
 				displayEvent(value);
 			}
@@ -61,39 +76,58 @@ function getPhoto(){
 	});
 }
 
-function displayPhoto(value){
+function displayPhoto(photoDetails){
 	$("#photo").empty();
 	
 	url = "file:///";
 	url += currentPath==""?"E:":currentPath;
-	$.each(value, function(folder, foldername){
+	$.each(photoDetails, function(folder, foldername){
 		if(folder > 0 && foldername != ""){
 			url = url + "/" + foldername;
 		}
 	});
-	url = encodeURI(url);
-	$("#photo").append("<img src="+url+" width = '500px'></img>");
+	element = getDisplayElementforLocalPath(url);
+	$("#photo").append(element);
 }
 
-function displayPersons(value){
+function getDisplayElementforLocalPath(url){
+	url = encodeURI(url);
+	urlParts = url.split("\.");
+	if(urlParts.length>1){
+		if(urlParts[1] == "jpg" || urlParts[1] == "png"){
+			return $("<img>").attr("src",url).attr("alt",url);
+		}
+		else if(urlParts[1] == "mp4"){
+			return $('<video />', {
+				src: url,
+				type: 'video/mp4',
+				controls: true
+			});
+		}
+		else return $("<h4>").text("FOLDER " + url);
+	}
+	
+}
+
+function displayPersons(photoDetails){
 	$("#persons").empty();
-	$.get( "http://localhost:7200/repositories/Test", { query:getPersonsFromDocRequest(value[0])} )
+	$.get( "http://localhost:7200/repositories/Test", { query:getPersonsFromDocRequest(photoDetails[0])} )
 	  .done(function( data ) {
 		populateFrame($("#persons"), data);
 	});
 }
 
-function displayLocation(value){
+function displayLocation(photoDetails){
 	$("#location").empty();
-	$.get( "http://localhost:7200/repositories/Test", { query:getLocationsFromDocRequest(value[0])} )
+	$.get( "http://localhost:7200/repositories/Test", { query:getLocationsFromDocRequest(photoDetails[0])} )
 	  .done(function( data ) {
 		populateFrame($("#location"), data);
 	});
 }
 
-function displayEvent(value){
+function displayEvent(photoDetails){
 	$("#event").empty();
-	$.get( "http://localhost:7200/repositories/Test", { query:getEventsFromDocRequest(value[0])} )
+	$.get( "http://localhost:7200/repositories/Test", { query:getEventsFromDocRequest(photoDetails[0])} )
 	  .done(function( data ) {
 		populateFrame($("#event"), data);
 	});
@@ -109,17 +143,27 @@ function populateFrame(element, data){
 		});
 }
 
-function getAllPersons(){
+function displayPersonsToSelect(photoDetails){
 	$.get( "http://localhost:7200/repositories/Test", { query:"select ?a where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>}"} )
 	  .done(function( data ) {
 		  list = CSVToArray(data,",");
 		console.log( CSVToArray(data,",") );
-		$.each(list, function(index, value){
+		$("#selectPersons").empty();
+		$.each(list, function(index, personUri){
 			if(index > 0){
-				$("#photo").empty().append($("<div class="+value+">"+value+"</d>"));
+				person = $("<div>").addClass("selectPerson");
+				person.appendTo($("#selectPersons"));
+				addPersonButton = $("<div>").addClass("button inline").text("Voeg toe").click(function(){addPersonToPhoto(photoDetails[0],personUri)});
+				addPersonButton.appendTo(person);
+				personText = $("<div>").addClass("inline").text(personUri).appendTo(person);
 			}
 		});
 	});
+}
+
+function addPersonToPhoto(photoURI,personUri){
+	$.post( "http://localhost:7200/repositories/Test/statements", { update:getAddPersonToDocRequest(photoURI,personUri)} )
+	  .done(displayPersons(value));
 }
 
 // ref: http://stackoverflow.com/a/1293163/2343

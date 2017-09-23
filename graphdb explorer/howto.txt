@@ -12,3 +12,25 @@ https://stackoverflow.com/questions/1293147/javascript-code-to-parse-csv-data
 
 locale foto's tonen in browser:
 https://stackoverflow.com/questions/4090712/why-cant-i-do-img-src-c-localfile-jpg
+
+Populeer de triple store met file contents
+Van uit de folder gebruik cmd om recursief alle filenames met pad naar file:
+dir /A/s/b > files.txt
+
+In de triple store heeft elk document een parameter voor elk van zijn ancestor folders startend vanaf de hoofdfolder "Familie_fotos":
+E:\Familie_fotos\Fam Vanloocke-Vancoillie\Office Lens 20151225-083958.jpg
+Dit wordt
+<resource> <http://example.com/doc/folder0> "Familie_fotos";
+<resource> <http://example.com/doc/folder1> "Fam Vanloocke-Vancoillie";
+<resource> <http://example.com/doc/folder2> "Office Lens 20151225-083958.jpg";
+Dit tot en met folder5
+
+Elke resource is een document
+<resource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/doc/doc>
+of kortweg
+<resource> a <http://example.com/doc/doc>
+
+Elke resource heeft een pad
+<resource> <http://example.com/doc/path> "file:///E:/Google%20Drive/Familie%20foto's/Fam Vanloocke-Vancoillie/Office Lens 20151225-083958.jpg"
+
+Ik ben van plan deze uit te fazeren gezien de folders al deze info bevatten, het is een artefact van de eerdere invoer. Voorlopig kan ik deze inhoud gebruiken om oude met nieuwe resource url te linken
