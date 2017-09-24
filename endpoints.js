@@ -110,6 +110,7 @@ function displayPersons(photoDetails){
 }
 
 function getPersonsFromDocRequest(docUrl){
+	return "select * where { ?s <http://example.com/person/depiction> <"+ docUrl +"> .}";
 }
 
 function getAllPersonsAndPresentToDocRequest(docUrl){
