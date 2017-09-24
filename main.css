@@ -31,3 +31,7 @@ div#photo video{
 	max-height:400px;
 	overflow-y:scroll;
 }
+
+.present{
+	background-color: yellow;
+}

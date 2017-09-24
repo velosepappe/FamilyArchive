@@ -37,20 +37,12 @@ function getPhotoUrlRequest(offset){
 	return request;
 }
 
-function getPersonsFromDocRequest(docUrl){
-	return "select * where { ?s <http://example.com/person/depiction> <"+ docUrl +"> .} limit 100 ";
-}
-
 function getLocationsFromDocRequest(docUrl){
 	return "select * where {  <"+ docUrl +"> <http://purl.org/dc/terms/spatial> ?s .} limit 100 ";
 }
 
 function getEventsFromDocRequest(docUrl){
 	return "select * where {  <"+ docUrl +"> <http://example.com/doc/recordEvent> ?s .} limit 100 ";
-}
-
-function getAddPersonToDocRequest(docUrl, personUrl){
-	return "insert { <" + personUrl + "> <http://example.com/person/depiction> <" + docUrl + "> } where{} ";
 }
 
 function getPhotoWithOffset(offset){
@@ -117,6 +109,38 @@ function displayPersons(photoDetails){
 	});
 }
 
+function getPersonsFromDocRequest(docUrl){
+}
+
+function getAllPersonsAndPresentToDocRequest(docUrl){
+	return "select ?a ?b where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. OPTIONAL {?a ?b <" + docUrl + ">}}"
+}
+
+function displayPersonsToSelect(photoDetails){
+	$.get( "http://localhost:7200/repositories/Test", { query:getAllPersonsAndPresentToDocRequest(photoDetails[0])} )
+	  .done(function( data ) {
+		  list = CSVToArray(data,",");
+		console.log( CSVToArray(data,",") );
+		$("#selectPersons").empty();
+		$.each(list, function(index, personUri){
+			if(index > 0){
+				person = $("<div>").addClass("selectPerson");
+				personImageButton = $("<div>").addClass("button inline");
+				personImageButton.appendTo(person);
+				$("<div>").addClass("inline").text(personUri[0]).appendTo(person);
+				if(personUri[1] == "http://example.com/person/depiction"){
+					person.addClass("present").prependTo($("#selectPersons"));
+					personImageButton.text("Verwijder").click(function(){removePersonFromPhoto(photoDetails,personUri[0])});
+				}
+				else{
+					person.appendTo($("#selectPersons"));
+					personImageButton.text("Voeg toe").click(function(){addPersonToPhoto(photoDetails,personUri[0])});
+				}
+			}
+		});
+	});
+}
+
 function displayLocation(photoDetails){
 	$("#location").empty();
 	$.get( "http://localhost:7200/repositories/Test", { query:getLocationsFromDocRequest(photoDetails[0])} )
@@ -143,27 +167,22 @@ function populateFrame(element, data){
 		});
 }
 
-function displayPersonsToSelect(photoDetails){
-	$.get( "http://localhost:7200/repositories/Test", { query:"select ?a where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>}"} )
-	  .done(function( data ) {
-		  list = CSVToArray(data,",");
-		console.log( CSVToArray(data,",") );
-		$("#selectPersons").empty();
-		$.each(list, function(index, personUri){
-			if(index > 0){
-				person = $("<div>").addClass("selectPerson");
-				person.appendTo($("#selectPersons"));
-				addPersonButton = $("<div>").addClass("button inline").text("Voeg toe").click(function(){addPersonToPhoto(photoDetails[0],personUri)});
-				addPersonButton.appendTo(person);
-				personText = $("<div>").addClass("inline").text(personUri).appendTo(person);
-			}
-		});
-	});
+function addPersonToPhoto(photoURI,personUri){
+	$.post( "http://localhost:7200/repositories/Test/statements", { update:getAddPersonToDocRequest(photoURI[0],personUri)} )
+	  .done(displayPersons(photoURI));
 }
 
-function addPersonToPhoto(photoURI,personUri){
-	$.post( "http://localhost:7200/repositories/Test/statements", { update:getAddPersonToDocRequest(photoURI,personUri)} )
-	  .done(displayPersons(value));
+function getAddPersonToDocRequest(docUrl, personUrl){
+	return "insert { <" + personUrl + "> <http://example.com/person/depiction> <" + docUrl + "> } where{} ";
+}
+
+function removePersonFromPhoto(photoURI,personUri){
+	$.post( "http://localhost:7200/repositories/Test/statements", { update:getRemovePersonFromDocRequest(photoURI[0],personUri)} )
+	  .done(displayPersons(photoURI));
+}
+
+function getRemovePersonFromDocRequest(docUrl, personUrl){
+	return "delete { <" + personUrl + "> <http://example.com/person/depiction> <" + docUrl + "> } where{} ";
 }
 
 // ref: http://stackoverflow.com/a/1293163/2343
