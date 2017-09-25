@@ -86,7 +86,7 @@ function getDisplayElementforLocalPath(url){
 	url = encodeURI(url);
 	urlParts = url.split("\.");
 	if(urlParts.length>1){
-		if(urlParts[urlParts.length-1] == "jpg" || urlParts[urlParts.length-1] == "png"){
+		if(urlParts[urlParts.length-1] == "jpg" || urlParts[urlParts.length-1] == "JPG" || urlParts[urlParts.length-1] == "png"){
 			return $("<img>").attr("src",url).attr("alt",url);
 		}
 		else if(urlParts[urlParts.length-1] == "mp4"){
@@ -148,7 +148,7 @@ function displayPersonsToSelect(photoDetails){
 				person.appendTo($("#selectPersons"));
 				personImageButton = $("<div>").addClass("button inline");
 				personImageButton.appendTo(person);
-				$("<div>").addClass("inline").text(personUri[0]).appendTo(person);
+				$("<div>").addClass("inline").text(personUri[0] + " (" + personUri[2] + ")").appendTo(person);
 				if(personUri[1] == "http://xmlns.com/foaf/0.1/depicts"){
 					person.addClass("present");
 					personImageButton.text("Verwijder").click(function(){removePersonFromPhoto(photoDetails,personUri[0])});
