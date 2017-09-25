@@ -113,12 +113,31 @@ function getPersonsFromDocRequest(docUrl){
 	return "select * where { <"+ docUrl +"> <http://xmlns.com/foaf/0.1/depicts> ?s .}";
 }
 
-function getAllPersonsAndPresentToDocRequest(docUrl){
-	return "select ?a ?b where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. OPTIONAL { <" + docUrl + "> ?b ?a}}"
+
+
+function getAllPersonsAndPresentToDocRequest(doc){
+	request = "select ?pers ?depicts ( count ( ?c ) as ?cnt)  where {?pers <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. OPTIONAL {<" + doc[0] + "> ?depicts ?pers.}" ;
+	request += " optional { ?c ";
+	fragments = currentPath.split("\\");
+	if(fragments.length >=1){
+		for(f = 1; f < fragments.length; f++){
+			request += "<http://example.com/doc/folder"+(f-1)+"> \"" + fragments[f] + "\"";
+			if(f == fragments-1){
+				request += ". ";
+			}
+			else{
+				request += "; ";
+			}
+		}
+	}
+	
+	request += "<http://xmlns.com/foaf/0.1/depicts> ?pers. } } group by ?pers ?depicts order by desc(?depicts) desc(?cnt)";
+	return request;
+	
 }
 
 function displayPersonsToSelect(photoDetails){
-	$.get( "http://localhost:7200/repositories/Test", { query:getAllPersonsAndPresentToDocRequest(photoDetails[0])} )
+	$.get( "http://localhost:7200/repositories/Test", { query:getAllPersonsAndPresentToDocRequest(photoDetails)} )
 	  .done(function( data ) {
 		  list = CSVToArray(data,",");
 		console.log( CSVToArray(data,",") );
@@ -126,15 +145,15 @@ function displayPersonsToSelect(photoDetails){
 		$.each(list, function(index, personUri){
 			if(index > 0){
 				person = $("<div>").addClass("selectPerson");
+				person.appendTo($("#selectPersons"));
 				personImageButton = $("<div>").addClass("button inline");
 				personImageButton.appendTo(person);
 				$("<div>").addClass("inline").text(personUri[0]).appendTo(person);
 				if(personUri[1] == "http://xmlns.com/foaf/0.1/depicts"){
-					person.addClass("present").prependTo($("#selectPersons"));
+					person.addClass("present");
 					personImageButton.text("Verwijder").click(function(){removePersonFromPhoto(photoDetails,personUri[0])});
 				}
 				else{
-					person.appendTo($("#selectPersons"));
 					personImageButton.text("Voeg toe").click(function(){addPersonToPhoto(photoDetails,personUri[0])});
 				}
 			}

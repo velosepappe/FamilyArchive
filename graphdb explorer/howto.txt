@@ -34,3 +34,15 @@ Elke resource heeft een pad
 <resource> <http://example.com/doc/path> "file:///E:/Google%20Drive/Familie%20foto's/Fam Vanloocke-Vancoillie/Office Lens 20151225-083958.jpg"
 
 Ik ben van plan deze uit te fazeren gezien de folders al deze info bevatten, het is een artefact van de eerdere invoer. Voorlopig kan ik deze inhoud gebruiken om oude met nieuwe resource url te linken
+
+
+Alle personen gesorteerd eers volgens komt de persoon voor in de foto, dan het aantal keer dat de persoon in een folder voorkomt
+select ?pers ?depicts ( count ( ?c ) as ?cnt)
+where {?pers <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>.
+	OPTIONAL {<http://vanloocke.sam.com/resource/2310> ?depicts ?pers.} 
+	optional { ?c <http://example.com/doc/folder0> "Familie_fotos";
+	<http://example.com/doc/folder1> "Fam Vanloocke-Vancoillie";
+	<http://example.com/doc/folder2> "Fotos ma en pa";
+	<http://example.com/doc/folder3> "Zak 1";
+	<http://xmlns.com/foaf/0.1/depicts> ?pers.}
+} group by ?pers ?depicts order by desc(?depicts) desc(?cnt)
