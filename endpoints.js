@@ -86,10 +86,10 @@ function getDisplayElementforLocalPath(url){
 	url = encodeURI(url);
 	urlParts = url.split("\.");
 	if(urlParts.length>1){
-		if(urlParts[1] == "jpg" || urlParts[1] == "png"){
+		if(urlParts[urlParts.length-1] == "jpg" || urlParts[urlParts.length-1] == "png"){
 			return $("<img>").attr("src",url).attr("alt",url);
 		}
-		else if(urlParts[1] == "mp4"){
+		else if(urlParts[urlParts.length-1] == "mp4"){
 			return $('<video />', {
 				src: url,
 				type: 'video/mp4',
@@ -110,11 +110,11 @@ function displayPersons(photoDetails){
 }
 
 function getPersonsFromDocRequest(docUrl){
-	return "select * where { ?s <http://example.com/person/depiction> <"+ docUrl +"> .}";
+	return "select * where { <"+ docUrl +"> <http://xmlns.com/foaf/0.1/depicts> ?s .}";
 }
 
 function getAllPersonsAndPresentToDocRequest(docUrl){
-	return "select ?a ?b where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. OPTIONAL {?a ?b <" + docUrl + ">}}"
+	return "select ?a ?b where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. OPTIONAL { <" + docUrl + "> ?b ?a}}"
 }
 
 function displayPersonsToSelect(photoDetails){
@@ -129,7 +129,7 @@ function displayPersonsToSelect(photoDetails){
 				personImageButton = $("<div>").addClass("button inline");
 				personImageButton.appendTo(person);
 				$("<div>").addClass("inline").text(personUri[0]).appendTo(person);
-				if(personUri[1] == "http://example.com/person/depiction"){
+				if(personUri[1] == "http://xmlns.com/foaf/0.1/depicts"){
 					person.addClass("present").prependTo($("#selectPersons"));
 					personImageButton.text("Verwijder").click(function(){removePersonFromPhoto(photoDetails,personUri[0])});
 				}
@@ -174,7 +174,7 @@ function addPersonToPhoto(photoURI,personUri){
 }
 
 function getAddPersonToDocRequest(docUrl, personUrl){
-	return "insert { <" + personUrl + "> <http://example.com/person/depiction> <" + docUrl + "> } where{} ";
+	return "insert { <" + docUrl + "> <http://xmlns.com/foaf/0.1/depicts> <" + personUrl + "> } where{} ";
 }
 
 function removePersonFromPhoto(photoURI,personUri){
@@ -183,7 +183,7 @@ function removePersonFromPhoto(photoURI,personUri){
 }
 
 function getRemovePersonFromDocRequest(docUrl, personUrl){
-	return "delete { <" + personUrl + "> <http://example.com/person/depiction> <" + docUrl + "> } where{} ";
+	return "delete { <" + docUrl + "> <http://xmlns.com/foaf/0.1/depicts> <" + personUrl + "> } where{} ";
 }
 
 // ref: http://stackoverflow.com/a/1293163/2343

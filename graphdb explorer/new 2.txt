@@ -1,0 +1,30 @@
+prefix spif: <http://spinrdf.org/spif#>
+prefix peep: <http://example.com/doc/>
+
+insert {
+  ?docURL a peep:doc;
+    peep:path ?path;
+    peep:folder0 ?folder0;
+    peep:folder1 ?folder1;
+    peep:folder2 ?folder2;
+    peep:folder3 ?folder3;
+    peep:folder4 ?folder4;
+    peep:folder5 ?folder5;
+        
+    
+} where {
+	# Uses SERVICE to fetch the raw RDF data from OntoRefine
+    service <http://localhost:7200/rdf-bridge/2087068740175> {
+  		?row a <urn:Row>;
+                <urn:col:Column_1> ?doc;
+                <urn:col:Column_2> ?path.
+        OPTIONAL {?row <urn:col:Column_3> ?folder0.}
+        OPTIONAL {?row <urn:col:Column_4> ?folder1.}
+        OPTIONAL {?row <urn:col:Column_5> ?folder2.}
+        OPTIONAL {?row <urn:col:Column_6> ?folder3.}
+        OPTIONAL {?row <urn:col:Column_7> ?folder4.}
+        OPTIONAL {?row <urn:col:Column_8> ?folder5.}
+	}
+    # conversions
+    bind(iri(?doc) as ?docURL)
+}
