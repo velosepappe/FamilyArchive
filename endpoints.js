@@ -63,9 +63,26 @@ function getPhoto(){
 				displayPersonsToSelect(value);
 				displayLocation(value);
 				displayEvent(value);
+				incrementTimesViewed(value);
 			}
 		});
 	});
+}
+
+function incrementTimesViewed(photoDetails){
+	$.get( "http://localhost:7200/repositories/Test", { query:getTimesViewedFromDocRequest(photoDetails[0])} )
+		.done(function( data ) {
+			timesViewed = CSVToArray(data,",")[1][0];
+			$.post( "http://localhost:7200/repositories/Test/statements", { update:getUpdateTimesViewedFromDocRequest(photoDetails[0], parseInt(timesViewed))} );
+		});
+}
+
+function getTimesViewedFromDocRequest(docUrl){
+	return "select * where {  <"+ docUrl +"> <http://example.com/doc/timesviewed> ?s .} limit 100 ";
+}
+
+function getUpdateTimesViewedFromDocRequest(docUrl, timesViewed){
+	return "delete {<"+ docUrl +"> <http://example.com/doc/timesviewed> "+ timesViewed +".}insert {   <"+ docUrl +"> <http://example.com/doc/timesviewed> "+ (timesViewed + 1) +".} where {<"+ docUrl +"> <http://example.com/doc/timesviewed> "+ timesViewed +".}"
 }
 
 function displayPhoto(photoDetails){
