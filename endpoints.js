@@ -63,18 +63,22 @@ function getPhoto(){
 				displayPersonsToSelect(value);
 				displayLocation(value);
 				displayEvent(value);
-				incrementTimesViewed(value);
+				processResourceViewed(value);
 			}
 		});
 	});
 }
 
+function processResourceViewed(photoDetails){
+	incrementTimesViewed(photoDetails);
+	updateLastViewed(photoDetails);
+}
+
 function incrementTimesViewed(photoDetails){
-	$.get( "http://localhost:7200/repositories/Test", { query:getTimesViewedFromDocRequest(photoDetails[0])} )
-		.done(function( data ) {
-			timesViewed = CSVToArray(data,",")[1][0];
-			$.post( "http://localhost:7200/repositories/Test/statements", { update:getUpdateTimesViewedFromDocRequest(photoDetails[0], parseInt(timesViewed))} );
-		});
+	$.get( "http://localhost:7200/repositories/Test", { query:getTimesViewedFromDocRequest(photoDetails[0])} ).done(function( data ) {
+		timesViewed = CSVToArray(data,",")[1][0];
+		$.post( "http://localhost:7200/repositories/Test/statements", { update:getUpdateTimesViewedFromDocRequest(photoDetails[0], parseInt(timesViewed))} );
+	});
 }
 
 function getTimesViewedFromDocRequest(docUrl){
@@ -83,6 +87,15 @@ function getTimesViewedFromDocRequest(docUrl){
 
 function getUpdateTimesViewedFromDocRequest(docUrl, timesViewed){
 	return "delete {<"+ docUrl +"> <http://example.com/doc/timesviewed> "+ timesViewed +".}insert {   <"+ docUrl +"> <http://example.com/doc/timesviewed> "+ (timesViewed + 1) +".} where {<"+ docUrl +"> <http://example.com/doc/timesviewed> "+ timesViewed +".}"
+}
+
+function updateLastViewed(photoDetails){
+	$.post( "http://localhost:7200/repositories/Test/statements", { update:getUpdateLastViewedFromDocRequest(photoDetails[0])} );
+}
+
+function getUpdateLastViewedFromDocRequest(docUrl){
+	now = new Date();
+	return 	"prefix spif: <http://spinrdf.org/spif#> delete {<"+ docUrl +"> <http://example.com/doc/lastviewed> ?last.}insert {   <"+ docUrl +"> <http://example.com/doc/lastviewed> \"" + now.toISOString() + "\"^^xsd:dateTime.} where {OPTIONAL{<"+ docUrl +"> <http://example.com/doc/lastviewed> ?last.}}"
 }
 
 function displayPhoto(photoDetails){
