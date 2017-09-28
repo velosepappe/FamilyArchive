@@ -59,7 +59,6 @@ function getPhoto(){
 			if(index == 1){
 				
 				displayPhoto(value);
-				displayPersons(value);
 				displayPersonsToSelect(value);
 				displayLocation(value);
 				displayEvent(value);
@@ -129,14 +128,6 @@ function getDisplayElementforLocalPath(url){
 		else return $("<h4>").text("FOLDER " + url);
 	}
 	
-}
-
-function displayPersons(photoDetails){
-	$("#persons").empty();
-	$.get( "http://localhost:7200/repositories/Test", { query:getPersonsFromDocRequest(photoDetails[0])} )
-	  .done(function( data ) {
-		populateFrame($("#persons"), data);
-	});
 }
 
 function getPersonsFromDocRequest(docUrl){
@@ -219,7 +210,7 @@ function populateFrame(element, data){
 
 function addPersonToPhoto(photoURI,personUri){
 	$.post( "http://localhost:7200/repositories/Test/statements", { update:getAddPersonToDocRequest(photoURI[0],personUri)} )
-	  .done(displayPersons(photoURI));
+	  .done(function( data ) {displayPersonsToSelect(photoURI);});
 }
 
 function getAddPersonToDocRequest(docUrl, personUrl){
@@ -228,7 +219,7 @@ function getAddPersonToDocRequest(docUrl, personUrl){
 
 function removePersonFromPhoto(photoURI,personUri){
 	$.post( "http://localhost:7200/repositories/Test/statements", { update:getRemovePersonFromDocRequest(photoURI[0],personUri)} )
-	  .done(displayPersons(photoURI));
+	  .done(function( data ) {displayPersonsToSelect(photoURI);});
 }
 
 function getRemovePersonFromDocRequest(docUrl, personUrl){
