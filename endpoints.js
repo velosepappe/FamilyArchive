@@ -4,10 +4,53 @@ $(document).ready(function(){
 	$("#previousButton").click(function() {getPhotoWithOffset(-1)});
 	$("#submitPath").click(function() {currentPath = $("#inputPath").val(); nextPhotoIndex = 0; getPhoto();});
 	$("#submitPerson").click(function() {createNewPerson($("#newPerson").val());});
+	$("#submitLocation").click(function() {createNewLocation($("#newLocation").val());});
 });
-
 var nextPhotoIndex = 0;
 var currentPath="";
+var map;
+
+function myMap() {
+	var mapProp= {
+			center:new google.maps.LatLng(51.053889, 3.705),
+			zoom:3,
+		};
+	map=new google.maps.Map(document.getElementById("googleMap"),mapProp);
+	
+	
+	$.get( "http://localhost:7200/repositories/Test",{query:"select ?a where {?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Place>}"}).done(function(data) {
+		list = CSVToArray(data,",");
+		$.each(list, function(index, value){
+			if(index >0){
+				$.get( "http://localhost:7200/repositories/Test",{query:"select ?name ?lat ?lng where {<"+value[0]+"> a <http://schema.org/Place>; <http://schema.org/name> ?name; <http://schema.org/geo> ?geo. ?geo <http://schema.org/latitude> ?lat; <http://schema.org/longitude> ?lng.}"}).done(function(locationData) {
+					loc = CSVToArray(locationData,",");
+					
+					var location = new google.maps.LatLng(loc[1][1],loc[1][2]);
+
+					new google.maps.Marker({position: location}).setMap(map);
+				});
+				
+			}
+		});
+	});
+}
+
+function createNewLocation(geoNamesUrl){
+	splits = geoNamesUrl.split('/');
+	if(splits[2] == "www.geonames.org"){
+		$.get( "http://www.geonames.org/getJSON", {geonameId:splits[3], username:'velosepappe'}).done(function( geodata ) {
+			$.post( "http://localhost:7200/repositories/Test/statements", { update:getCreateNewLocationRequest(geoNamesUrl, "http://www.geonames.org/"+geoNamesUrl.split('/')[3], geodata['name'], geodata['lat'],geodata['lng'] )} )
+			  .done(function( d ) {
+				  var location = new google.maps.LatLng(geodata['lat'],geodata['lng']);
+				  new google.maps.Marker({position: location}).setMap(map);
+			  });
+		});
+	}
+}
+
+function getCreateNewLocationRequest(uri, geoCoordinatesUri, name, lat, lng){
+	return "insert{<"+uri+"> <http://schema.org/geo> <"+geoCoordinatesUri+">; a <http://schema.org/Place>;<http://schema.org/name> '"+name+"'. <"+geoCoordinatesUri+"> a <http://schema.org/GeoCoordinates>; <http://schema.org/latitude> "+lat+"; <http://schema.org/longitude> "+lng+";} where {}";
+}
 
 function createNewPerson(name){
 		$.post( "http://localhost:7200/repositories/Test/statements", { update:getCreateNewPersonRequest(name)} )

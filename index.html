@@ -17,15 +17,18 @@
 	</nav>
 	<div id="info" class="inline">
 		<h4>Mensen</h4>
-		<div>Persoon aanmaken: <input type="text" id="newPerson"><input type="submit" id="submitPerson" value="Ga"></div>
+		<div>Persoon aanmaken: <input type="text" id="newPerson"><input type="submit" id="submitPerson" value="Voeg toe"></div>
 		<div id="personsPanel">
 			<div id="selectPersons" class="inline"></div>
 		</div>
 		<h4>Locaties</h4>
-		<div id="location"></div>
+		<div>Locatie aanmaken: <input type="text" id="newLocation"><input type="submit" id="submitLocation" value="Voeg toe"></div>
+		<div id="location">
+		</div>
+		<div id="googleMap" style="width:100%;height:400px;"></div>
 		<h4>Gebeurtenissen</h4>
 		<div id="event"></div></div>
 	<div id="photo" class="inline"></div>
-	
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBhKfgr3Gwx4-JbU4Q-Bf7j9X4yFW3VZwU&callback=myMap"></script>
 </body>
 </html>
