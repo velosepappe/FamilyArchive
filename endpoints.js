@@ -58,7 +58,7 @@ function createNewLocation(geoNamesUrl){
 }
 
 function getCreateNewLocationRequest(uri, geoCoordinatesUri, name, lat, lng){
-	return "insert{<"+uri+"> <http://schema.org/geo> <"+geoCoordinatesUri+">; a <http://schema.org/Place>;<http://schema.org/name> '"+name+"'. <"+geoCoordinatesUri+"> a <http://schema.org/GeoCoordinates>; <http://schema.org/latitude> "+lat+"; <http://schema.org/longitude> "+lng+";} where {}";
+	return "insert{<"+uri+"> <http://schema.org/geo> <"+geoCoordinatesUri+">; a <http://schema.org/Place>;<http://schema.org/name> \""+name+"\". <"+geoCoordinatesUri+"> a <http://schema.org/GeoCoordinates>; <http://schema.org/latitude> "+lat+"; <http://schema.org/longitude> "+lng+";} where {}";
 }
 
 function createNewPerson(name){
