@@ -13,6 +13,9 @@ var map;
 var selectedLocation;
 var currentPhoto;
 
+var markers = {};
+var selectedMarker;
+
 function myMap() {
 	var mapProp= {
 			center:new google.maps.LatLng(51.053889, 3.705),
@@ -25,21 +28,30 @@ function myMap() {
 		list = CSVToArray(data,",");
 		$.each(list, function(index, value){
 			if(index >0){
-					
-				var location = new google.maps.LatLng(value[2],value[3]);
-
-				marker = new google.maps.Marker({position: location,map: map, title:value[1]});
-				marker.addListener('click',function(){selectedLocation = value[0]});
-				
+				addLocation(value[0], value[1], value[2], value[3]);
 			}
 		});
 	});
+}
+function addLocation(uri, name, lat, lng){
+	var location = new google.maps.LatLng(lat, lng);
+
+	marker = new google.maps.Marker({position: location,map: map, title:name});
+	marker.addListener('click',function(){
+		selectedLocation = uri;
+		if(selectedMarker != null){
+			selectedMarker.setAnimation(null);
+		}
+		selectedMarker = this;
+		selectedMarker.setAnimation(google.maps.Animation.BOUNCE);
+	});
+	markers[uri] = marker;
 }
 
 function attachLocation(){
 	if(selectedLocation != null){
 		$.post( "http://localhost:7200/repositories/Test/statements", { update:"delete {<"+currentPhoto[0]+">  <http://purl.org/dc/terms/spatial> ?c} insert{<"+currentPhoto[0]+">  <http://purl.org/dc/terms/spatial> <"+selectedLocation+">} where {OPTIONAL{<"+currentPhoto[0]+"> <http://purl.org/dc/terms/spatial> ?c}.}"} )
-		  .done(function( data ) {displayLocation(currentPhoto[0]);});
+		  .done(function( data ) {displayLocationsToSelect(currentPhoto[0]);});
 	}
 }
 
@@ -49,9 +61,7 @@ function createNewLocation(geoNamesUrl){
 		$.get( "http://www.geonames.org/getJSON", {geonameId:splits[3], username:'velosepappe'}).done(function( geodata ) {
 			$.post( "http://localhost:7200/repositories/Test/statements", { update:getCreateNewLocationRequest(geoNamesUrl, "http://www.geonames.org/"+geoNamesUrl.split('/')[3], geodata['name'], geodata['lat'],geodata['lng'] )} )
 			  .done(function( d ) {
-				  var location = new google.maps.LatLng(geodata['lat'],geodata['lng']);
-				  marker = new google.maps.Marker({position: location,map: map, title:geodata['name']});
-					marker.addListener('click',function(){selectedLocation = geoNamesUrl});
+				  addLocation(geoNamesUrl, geodata['name'], geodata['lat'], geodata['lng']);
 			  });
 		});
 	}
@@ -106,7 +116,6 @@ function getPhoto(){
 	$.get( "http://localhost:7200/repositories/Test", { query:getPhotoUrlRequest(nextPhotoIndex)} )
 	  .done(function( data ) {
 		  list = CSVToArray(data,",");
-		console.log( CSVToArray(data,",") );
 		$.each(list, function(index, value){
 			if(index == 1){
 				currentPhoto = value;
@@ -115,6 +124,7 @@ function getPhoto(){
 				displayLocation(value);
 				displayEvent(value);
 				processResourceViewed(value);
+				displayLocationsToSelect(value);
 			}
 		});
 	});
@@ -209,11 +219,51 @@ function getAllPersonsAndPresentToDocRequest(doc){
 	
 }
 
+function getAllLocationsAndPresentToDocRequest(doc){
+	request = "select ?loc ?name ?lat ?lng ?spatial ( count ( ?c ) as ?cnt)  where {?loc <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Place>; <http://schema.org/geo> ?geo; <http://schema.org/name> ?name. ?geo <http://schema.org/latitude> ?lat; <http://schema.org/longitude> ?lng. OPTIONAL {<" + doc[0] + "> ?spatial ?loc.}" ;
+	request += " optional { ?c ";
+	fragments = currentPath.split("\\");
+	if(fragments.length >=1){
+		for(f = 1; f < fragments.length; f++){
+			request += "<http://example.com/doc/folder"+(f-1)+"> \"" + fragments[f] + "\"";
+			if(f == fragments-1){
+				request += ". ";
+			}
+			else{
+				request += "; ";
+			}
+		}
+	}
+	
+	request += "<http://purl.org/dc/terms/spatial> ?loc. } } group by ?loc ?name ?lat ?lng ?spatial ?depicts order by desc(?spatial) desc(?cnt)";
+	return request;
+	
+}
+function displayLocationsToSelect(photoDetails){
+	$.get( "http://localhost:7200/repositories/Test", { query:getAllLocationsAndPresentToDocRequest(photoDetails)} )
+	  .done(function( data ) {
+		  list = CSVToArray(data,",");
+		console.log( list );
+		$.each(list, function(index, location){
+			if(index > 0){
+				if(location[4]){
+					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');					
+				}
+				else if(location[5] > 0){
+					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+				}
+				else{
+					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+				}
+			}
+		});
+	});
+}
+
 function displayPersonsToSelect(photoDetails){
 	$.get( "http://localhost:7200/repositories/Test", { query:getAllPersonsAndPresentToDocRequest(photoDetails)} )
 	  .done(function( data ) {
 		  list = CSVToArray(data,",");
-		console.log( CSVToArray(data,",") );
 		$("#selectPersons").empty();
 		$.each(list, function(index, personUri){
 			if(index > 0){
@@ -252,7 +302,6 @@ function displayEvent(photoDetails){
 
 function populateFrame(element, data){
 	  list = CSVToArray(data,",");
-		console.log( CSVToArray(data,",") );
 		$.each(list, function(index, value){
 			if(index >= 1){
 				element.append("<p>" + value[0] + "</p>");
