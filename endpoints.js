@@ -2,6 +2,8 @@ $(document).ready(function(){
 	getPhoto();
 	$("#nextButton").click(function() {getPhotoWithOffset(1)});
 	$("#previousButton").click(function() {getPhotoWithOffset(-1)});
+	$("#nextButton10").click(function() {getPhotoWithOffset(10)});
+	$("#previousButton10").click(function() {getPhotoWithOffset(-10)});
 	$("#submitPath").click(function() {currentPath = $("#inputPath").val(); nextPhotoIndex = 0; getPhoto();});
 	$("#submitPerson").click(function() {createNewPerson($("#newPerson").val());});
 	$("#submitLocation").click(function() {createNewLocation($("#newLocation").val())});
@@ -247,7 +249,6 @@ function displayLocationsToSelect(photoDetails){
 		
 		var folderBounds = new google.maps.LatLngBounds();
 		var hasFolderBounds = false;
-		var allBounds = new google.maps.LatLngBounds();
 		var photoLocation;
 		$.each(list, function(index, location){
 			if(index > 0){
@@ -264,18 +265,18 @@ function displayLocationsToSelect(photoDetails){
 				}
 				else{
 					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
-					allBounds.extend(markers[location[0]].getPosition());
 				}
 			}
 			if(photoLocation){
 				map.setCenter(photoLocation.getPosition());
-				map.setZoom(10);
+				map.setZoom(12);
 			}
 			else if(hasFolderBounds){
 				map.fitBounds(folderBounds);
 			}
 			else{
-				map.fitBounds(allBounds);
+				map.setCenter(new google.maps.LatLng(51.053889, 3.705));
+				map.setZoom(3);
 			}
 		});
 	});
