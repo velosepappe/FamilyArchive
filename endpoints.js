@@ -244,17 +244,38 @@ function displayLocationsToSelect(photoDetails){
 	  .done(function( data ) {
 		  list = CSVToArray(data,",");
 		console.log( list );
+		
+		var folderBounds = new google.maps.LatLngBounds();
+		var hasFolderBounds = false;
+		var allBounds = new google.maps.LatLngBounds();
+		var photoLocation;
 		$.each(list, function(index, location){
 			if(index > 0){
 				if(location[4]){
-					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');					
+					
+					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/yellow-dot.png');
+					photoLocation = markers[location[0]];
+										
 				}
 				else if(location[5] > 0){
 					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/green-dot.png');
+					hasFolderBounds = true;
+					folderBounds.extend(markers[location[0]].getPosition());
 				}
 				else{
 					markers[location[0]].setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+					allBounds.extend(markers[location[0]].getPosition());
 				}
+			}
+			if(photoLocation){
+				map.setCenter(photoLocation.getPosition());
+				map.setZoom(10);
+			}
+			else if(hasFolderBounds){
+				map.fitBounds(folderBounds);
+			}
+			else{
+				map.fitBounds(allBounds);
 			}
 		});
 	});
