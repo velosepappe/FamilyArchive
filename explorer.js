@@ -5,9 +5,6 @@ $(document).ready(function(){
 	$("#nextButton10").click(function() {getPhotoWithOffset(10)});
 	$("#previousButton10").click(function() {getPhotoWithOffset(-10)});
 	$("#submitPath").click(function() {currentPath = $("#inputPath").val(); nextPhotoIndex = 0; getPhoto();});
-	$("#submitPerson").click(function() {createNewPerson($("#newPerson").val());});
-	$("#submitLocation").click(function() {createNewLocation($("#newLocation").val())});
-	$("#attachLocation").click(function() {attachLocation();});
 });
 
 var mainDirectory = "E:";
@@ -42,52 +39,24 @@ function addLocation(uri, name, lat, lng){
 
 	marker = new google.maps.Marker({position: location,map: map, title:name});
 	marker.addListener('click',function(){
+		nextPhotoIndex = 0;
 		selectedLocation = uri;
 		if(selectedMarker != null){
 			selectedMarker.setAnimation(null);
 		}
 		selectedMarker = this;
 		selectedMarker.setAnimation(google.maps.Animation.BOUNCE);
+		getPhoto();
 	});
 	markers[uri] = marker;
 }
-
-function attachLocation(){
-	if(selectedLocation != null){
-		$.post( "http://localhost:7200/repositories/Test/statements", { update:"delete {<"+currentPhoto[0]+">  <http://purl.org/dc/terms/spatial> ?c} insert{<"+currentPhoto[0]+">  <http://purl.org/dc/terms/spatial> <"+selectedLocation+">} where {OPTIONAL{<"+currentPhoto[0]+"> <http://purl.org/dc/terms/spatial> ?c}.}"} )
-		  .done(function( data ) {displayLocationsToSelect(currentPhoto[0]);});
-	}
-}
-
-function createNewLocation(geoNamesUrl){
-	splits = geoNamesUrl.split('/');
-	if(splits[2] == "www.geonames.org"){
-		$.get( "http://www.geonames.org/getJSON", {geonameId:splits[3], username:'velosepappe'}).done(function( geodata ) {
-			$.post( "http://localhost:7200/repositories/Test/statements", { update:getCreateNewLocationRequest(geoNamesUrl, "http://www.geonames.org/"+geoNamesUrl.split('/')[3], geodata['name'], geodata['lat'],geodata['lng'] )} )
-			  .done(function( d ) {
-				  addLocation(geoNamesUrl, geodata['name'], geodata['lat'], geodata['lng']);
-			  });
-		});
-	}
-}
-
-function getCreateNewLocationRequest(uri, geoCoordinatesUri, name, lat, lng){
-	return "insert{<"+uri+"> <http://schema.org/geo> <"+geoCoordinatesUri+">; a <http://schema.org/Place>;<http://schema.org/name> \""+name+"\". <"+geoCoordinatesUri+"> a <http://schema.org/GeoCoordinates>; <http://schema.org/latitude> "+lat+"; <http://schema.org/longitude> "+lng+";} where {}";
-}
-
-function createNewPerson(name){
-		$.post( "http://localhost:7200/repositories/Test/statements", { update:getCreateNewPersonRequest(name)} )
-	  .done(function( data ) {
-		  getPhoto();
-	  });
-}
-function getCreateNewPersonRequest(name){
-	return "insert { <http://example.com/person/" + encodeURI(name.split(' ').join('+')) + "> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/person/person>. } where {}";
-
-}
 function getPhotoUrlRequest(offset){
 	fragments = currentPath.split("\\");
-	request = "select * where { 	?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/doc/doc> ";
+	request = "select * where { 	?a <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://example.com/doc/doc>; ";
+	if(selectedLocation){
+		
+		request += " <http://purl.org/dc/terms/spatial> <" + selectedLocation + ">;";
+	}
 	f = 0;
 	if(fragments.length > 1){
 		for(; f < fragments.length-1; f++){
@@ -225,21 +194,7 @@ function getAllPersonsAndPresentToDocRequest(doc){
 
 function getAllLocationsAndPresentToDocRequest(doc){
 	request = "select ?loc ?name ?lat ?lng ?spatial ( count ( ?c ) as ?cnt)  where {?loc <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://schema.org/Place>; <http://schema.org/geo> ?geo; <http://schema.org/name> ?name. ?geo <http://schema.org/latitude> ?lat; <http://schema.org/longitude> ?lng. OPTIONAL {<" + doc[0] + "> ?spatial ?loc.}" ;
-	request += " optional { ?c ";
-	fragments = currentPath.split("\\");
-	if(fragments.length >=1){
-		for(f = 1; f < fragments.length; f++){
-			request += "<http://example.com/doc/folder"+(f-1)+"> \"" + fragments[f] + "\"";
-			if(f == fragments-1){
-				request += ". ";
-			}
-			else{
-				request += "; ";
-			}
-		}
-	}
-	
-	request += "<http://purl.org/dc/terms/spatial> ?loc. } } group by ?loc ?name ?lat ?lng ?spatial order by desc(?spatial) desc(?cnt)";
+	request += " optional { ?c <http://purl.org/dc/terms/spatial> ?loc. } } group by ?loc ?name ?lat ?lng ?spatial order by desc(?spatial) desc(?cnt)";
 	return request;
 }
 
